@@ -11,7 +11,8 @@ def test_csv_parser(tmp_path: Path):
             "TICKET-1,Done",
             "TICKET-2,Todo",
             "TICKET-3,Done",
+            "FOOBAR-4,Done",
         ]))
-    parser = CsvParser(csv, "id", "status", "Done")
+    parser = CsvParser(csv, "id", "status", "Done", "TICKET-")
     done_tickets = parser.done_tickets()
     assert done_tickets == ["TICKET-1", "TICKET-3"]

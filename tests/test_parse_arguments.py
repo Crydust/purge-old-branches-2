@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from purge_old_branches_2 import cli
 
 
@@ -13,7 +15,7 @@ def test_parse_arguments():
         "--days", "8",
         "--dry-run",
     ])
-    assert args.csv_file == "foo1"
+    assert args.csv_file == Path("foo1")
     assert args.csv_ticket_col == "foo2"
     assert args.csv_status_col == "foo3"
     assert args.csv_done_status == "foo4"
