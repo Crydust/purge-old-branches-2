@@ -89,4 +89,9 @@ def main(args: list[str] | None = None) -> int:
     branches_to_delete = _common_done_branches(
         arguments.prefix, branch_sets, done_tickets)
     print(branches_to_delete)
+    if arguments.dry_run:
+        print("Dry run: No branches will be deleted.")
+        return 0
+    with ThreadPoolExecutor(max_workers=len(git_repos)) as executor:
+        list(executor.map(methodcaller("delete_branches", branches_to_delete), git_repos))
     return 0

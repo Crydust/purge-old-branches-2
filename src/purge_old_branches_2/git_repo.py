@@ -28,6 +28,7 @@ class GitRepo:
     def _run_git_branch(self) -> CompletedProcess[str]:
         args = [
             "git",
+            "-C", self.path,
             "branch",
             "--list",
             "--no-color",
@@ -39,7 +40,6 @@ class GitRepo:
             args.extend(["--merged", self.target])
         result = subprocess.run(
             args,
-            cwd=self.path,
             capture_output=True,
             text=True,
             check=True,
@@ -59,3 +59,17 @@ class GitRepo:
                     and refname.startswith(self.prefix)):
                 branches.add(refname)
         return branches
+
+    def delete_branches(self, branches: list[str]) -> None:
+        batch_size = 10
+        for i in range(0, len(branches), batch_size):
+            batch = branches[i: i + batch_size]
+            if self.remote:
+                args = ["git", "-C", self.path, "push", "origin", "--delete"] + batch
+            else:
+                args = ["git", "-C", self.path, "branch", "--delete"] + batch
+            subprocess.run(
+                args,
+                cwd=self.path,
+                check=True,
+            )
