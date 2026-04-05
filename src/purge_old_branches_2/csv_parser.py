@@ -19,9 +19,8 @@ class CsvParser:
                 raise ValueError(f"Column '{self.ticket_col}' not found in CSV.")
             if self.status_col not in reader.fieldnames:
                 raise ValueError(f"Column '{self.status_col}' not found in CSV.")
-            return [row[self.ticket_col]
+            return [row[self.ticket_col].strip()
                     for row in reader
-                    if row[self.ticket_col].startswith(self.prefix)
-                    if row[self.status_col] == self.done_status
+                    if row[self.ticket_col].strip().startswith(self.prefix)
+                    if row[self.status_col].strip() == self.done_status
                     ]
-        return []

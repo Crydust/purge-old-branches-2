@@ -13,8 +13,7 @@ A branch is considered "stale" and eligible for deletion if **all** the followin
 ## Architecture
 The application is split into testable modules:
 - `csv_parser`: Extracts ticket data.
-- `git_wrapper`: Interfaces with Git to list branches, check merge status, and get commit dates.
-- `cleaner_logic`: Orchestrates the decision-making process.
+- `git_repo`: Interfaces with Git to list branches, check merge status, and get commit dates.
 - `cli`: Handles user configuration (local vs remote, branch prefixes, target branch name).
 
 ## Development Flow

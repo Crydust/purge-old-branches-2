@@ -32,7 +32,7 @@ class GitRepo:
             "branch",
             "--list",
             "--no-color",
-            "--format=%(authordate:iso8601-strict), %(committerdate:iso8601-strict), %(refname)",
+            "--format=%(authordate:iso8601-strict) ?sep? %(committerdate:iso8601-strict) ?sep? %(refname)",
         ]
         if self.remote:
             args.extend(["--remotes", "--merged", f"origin/{self.target}"])
@@ -50,7 +50,7 @@ class GitRepo:
         prefix = "refs/remotes/origin/" if self.remote else "refs/heads/"
         branches = set()
         for line in stdout.splitlines():
-            raw_a, raw_c, raw_r = line.split(", ", maxsplit=2)
+            raw_a, raw_c, raw_r = line.split(" ?sep? ", maxsplit=2)
             authordate = _datetime_at_utc(datetime.fromisoformat(raw_a))
             committerdate = _datetime_at_utc(datetime.fromisoformat(raw_c))
             refname = raw_r.removeprefix(prefix)

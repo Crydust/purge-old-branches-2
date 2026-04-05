@@ -2,7 +2,6 @@ import argparse
 import re
 from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass
-from operator import methodcaller
 from pathlib import Path
 
 from purge_old_branches_2.csv_parser import CsvParser
@@ -68,7 +67,6 @@ def _common_done_branches(
 
 def main(args: list[str] | None = None) -> int:
     arguments = _parse_arguments(args)
-    print(arguments)
     done_tickets = CsvParser(
         arguments.csv_file,
         arguments.csv_ticket_col,
@@ -76,7 +74,6 @@ def main(args: list[str] | None = None) -> int:
         arguments.csv_done_status,
         arguments.prefix,
     ).done_tickets()
-    print(done_tickets)
     git_repos: list[GitRepo] = [GitRepo(
         repo_path,
         arguments.prefix,
@@ -85,7 +82,7 @@ def main(args: list[str] | None = None) -> int:
         arguments.remote,
     ) for repo_path in arguments.repo]
     with ThreadPoolExecutor(max_workers=len(git_repos)) as executor:
-        branch_sets = list(executor.map(methodcaller("get_branches_to_delete"), git_repos))
+        branch_sets = list(executor.map(lambda r: r.get_branches_to_delete(), git_repos))
     branches_to_delete = _common_done_branches(
         arguments.prefix, branch_sets, done_tickets)
     print(branches_to_delete)
@@ -93,5 +90,6 @@ def main(args: list[str] | None = None) -> int:
         print("Dry run: No branches will be deleted.")
         return 0
     with ThreadPoolExecutor(max_workers=len(git_repos)) as executor:
-        list(executor.map(methodcaller("delete_branches", branches_to_delete), git_repos))
+        for repo in git_repos:
+            executor.submit(repo.delete_branches, branches_to_delete)
     return 0
