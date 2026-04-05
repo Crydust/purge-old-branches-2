@@ -29,7 +29,7 @@ This project follows a test-driven approach. For every feature implemented, corr
 ```shell
 python -m ruff check
 python -m pyright
-python -m pytest
+python -m pytest --cov=purge_old_branches_2 tests/
 python -m build
 ```
 

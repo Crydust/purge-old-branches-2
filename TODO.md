@@ -2,6 +2,6 @@
 
 - [x] parse arguments
 - [x] read csv
-- [ ] list branches
+- [x] list branches
 - [ ] intersection of branches from multiple repos
 - [ ] delete branches

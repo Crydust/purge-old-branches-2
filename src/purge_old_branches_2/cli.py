@@ -1,9 +1,11 @@
 import argparse
-import sys
+from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass
+from operator import methodcaller
 from pathlib import Path
 
 from purge_old_branches_2.csv_parser import CsvParser
+from purge_old_branches_2.git_repo import GitRepo
 
 
 @dataclass(frozen=True)
@@ -12,10 +14,11 @@ class Arguments:
     csv_ticket_col: str
     csv_status_col: str
     csv_done_status: str
-    repo: list[str]
+    repo: list[Path]
     prefix: str
     target: str
     days: int
+    remote: bool
     dry_run: bool
 
 
@@ -31,11 +34,12 @@ def parse_arguments(args: list[str] | None = None) -> Arguments:
                         help="Column name of the ticket status in the CSV file.")
     parser.add_argument("--csv-done-status", type=str, required=True,
                         help="Column value for 'Done' status in the CSV file.")
-    parser.add_argument("--repo", type=str, nargs="+", required=True,
+    parser.add_argument("--repo", type=Path, nargs="+", required=True,
                         help="Path(s) to the repositor(y/ies) to purge branches from.")
     parser.add_argument("--prefix", type=str, default="BUG-", help="Prefix to filter branches by.")
     parser.add_argument("--target", type=str, default="main", help="Target branch to compare against.")
     parser.add_argument("--days", type=int, default=90, help="Number of days to consider a branch stale.")
+    parser.add_argument("--remote", action="store_true", help="Delete remote instead of local branches.")
     parser.add_argument("--dry-run", action="store_true", help="Perform a dry run without deleting any branches.")
     return Arguments(**vars(parser.parse_args(args)))
 
@@ -51,9 +55,16 @@ def main(args: list[str] | None = None) -> int:
         arguments.prefix,
     ).done_tickets()
     print(done_tickets)
+    git_repos: list[GitRepo] = [GitRepo(
+        repo_path,
+        arguments.prefix,
+        arguments.target,
+        arguments.days,
+        arguments.remote,
+    ) for repo_path in arguments.repo]
+    with ThreadPoolExecutor(max_workers=len(git_repos)) as executor:
+        branch_sets = list(executor.map(methodcaller("get_branches_to_delete"), git_repos))
+    branches_to_delete = sorted(set.intersection(*branch_sets))
+    print(branches_to_delete)
 
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

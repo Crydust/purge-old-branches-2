@@ -13,14 +13,16 @@ def test_parse_arguments():
         "--prefix", "foo6",
         "--target", "foo7",
         "--days", "8",
+        "--remote",
         "--dry-run",
     ])
     assert args.csv_file == Path("foo1")
     assert args.csv_ticket_col == "foo2"
     assert args.csv_status_col == "foo3"
     assert args.csv_done_status == "foo4"
-    assert args.repo == ["foo5a", "foo5b"]
+    assert args.repo == [Path("foo5a"), Path("foo5b")]
     assert args.prefix == "foo6"
     assert args.target == "foo7"
     assert args.days == 8
+    assert args.remote is True
     assert args.dry_run is True
