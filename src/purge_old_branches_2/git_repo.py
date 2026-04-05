@@ -70,6 +70,7 @@ class GitRepo:
                 args = ["git", "-C", self.path, "branch", "--delete"] + batch
             subprocess.run(
                 args,
-                cwd=self.path,
+                capture_output=True,
+                text=True,
                 check=True,
             )
