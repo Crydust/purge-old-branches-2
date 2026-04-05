@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from purge_old_branches_2.git_repo import GitRepo

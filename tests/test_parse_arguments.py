@@ -4,7 +4,7 @@ from purge_old_branches_2 import cli
 
 
 def test_parse_arguments():
-    args = cli.parse_arguments([
+    args = cli._parse_arguments([
         "--csv-file", "foo1",
         "--csv-ticket-col", "foo2",
         "--csv-status-col", "foo3",

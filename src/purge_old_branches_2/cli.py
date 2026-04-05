@@ -1,4 +1,5 @@
 import argparse
+import re
 from concurrent.futures.thread import ThreadPoolExecutor
 from dataclasses import dataclass
 from operator import methodcaller
@@ -22,7 +23,7 @@ class Arguments:
     dry_run: bool
 
 
-def parse_arguments(args: list[str] | None = None) -> Arguments:
+def _parse_arguments(args: list[str] | None = None) -> Arguments:
     parser = argparse.ArgumentParser(
         prog="purge_old_branches_2",
         description="Purge stale Git branches based on Jira ticket status and branch age."
@@ -44,8 +45,29 @@ def parse_arguments(args: list[str] | None = None) -> Arguments:
     return Arguments(**vars(parser.parse_args(args)))
 
 
+def _common_done_branches(
+        prefix: str,
+        branch_sets: list[set[str]],
+        done_tickets: list[str]) -> list[str]:
+    branches_to_delete = set.intersection(*branch_sets)
+    pattern = re.compile(rf"^({re.escape(prefix)}[0-9]+).*$")
+    branches_to_delete = [
+        b for b in branches_to_delete
+        if (m := pattern.fullmatch(b)) and m.group(1) in done_tickets
+    ]
+
+    def sort_key(branch: str) -> int:
+        match = pattern.fullmatch(branch)
+        if not match:
+            raise ValueError(f"Branch '{branch}' does not match the expected format.")
+        return int(match.group(1).removeprefix(prefix))
+
+    branches_to_delete.sort(key=sort_key)
+    return branches_to_delete
+
+
 def main(args: list[str] | None = None) -> int:
-    arguments = parse_arguments(args)
+    arguments = _parse_arguments(args)
     print(arguments)
     done_tickets = CsvParser(
         arguments.csv_file,
@@ -64,7 +86,7 @@ def main(args: list[str] | None = None) -> int:
     ) for repo_path in arguments.repo]
     with ThreadPoolExecutor(max_workers=len(git_repos)) as executor:
         branch_sets = list(executor.map(methodcaller("get_branches_to_delete"), git_repos))
-    branches_to_delete = sorted(set.intersection(*branch_sets))
+    branches_to_delete = _common_done_branches(
+        arguments.prefix, branch_sets, done_tickets)
     print(branches_to_delete)
-
     return 0
